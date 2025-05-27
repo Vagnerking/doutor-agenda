@@ -18,7 +18,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
@@ -45,8 +48,21 @@ export default function SignupForm() {
     },
   });
 
-  function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
-    console.log(values);
+  async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
+    const router = useRouter();
+
+    await authClient.signUp.email(
+      {
+        name: values.name,
+        email: values.email,
+        password: values.password,
+      },
+      {
+        onSuccess: () => {
+          router.push("/dashboard");
+        },
+      },
+    );
   }
 
   return (
@@ -106,8 +122,16 @@ export default function SignupForm() {
             />
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full">
-              Criar Conta
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={registerForm.formState.isSubmitting}
+            >
+              {registerForm.formState.isSubmitting ? (
+                <Loader2 className="m-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Criar Conta"
+              )}
             </Button>
           </CardFooter>
         </form>
