@@ -59,8 +59,15 @@ export default function LoginForm() {
         onSuccess: () => {
           router.push("/dashboard");
         },
-        onError: () => {
-          toast.error("E-mail ou senha inválidos.");
+        onError: (ctx) => {
+          console.log(ctx.error.code);
+
+          if (ctx.error.code === "INVALID_EMAIL_OR_PASSWORD") {
+            toast.error("E-mail ou senha inválidos.");
+            return;
+          }
+
+          toast.error("Erro ao fazer login.");
         },
       },
     );
