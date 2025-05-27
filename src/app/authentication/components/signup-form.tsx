@@ -39,6 +39,8 @@ const registerSchema = z.object({
 });
 
 export default function SignupForm() {
+  const router = useRouter();
+
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -49,8 +51,6 @@ export default function SignupForm() {
   });
 
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
-    const router = useRouter();
-
     await authClient.signUp.email(
       {
         name: values.name,
