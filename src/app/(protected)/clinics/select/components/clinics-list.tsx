@@ -1,15 +1,12 @@
 "use client";
 
 import { Label } from "@radix-ui/react-label";
-import { ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon, Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-
-const handleClinicClick = (clinicId: string) => {
-  sessionStorage.setItem("clinicId", clinicId);
-  redirect("/dashboard");
-};
 
 export default function ClinicsList({
   clinics,
@@ -24,14 +21,42 @@ export default function ClinicsList({
     };
   }[];
 }) {
-  sessionStorage.setItem("clinicId", "");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClinicClick = async (clinicId: string) => {
+    setIsLoading(true);
+
+    await fetch("/api/clinics/set-clinic", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clinicId }),
+    }).then((res) => {
+      if (res.status === 204) {
+        redirect("/dashboard");
+      } else if (res.status === 401) {
+        toast.error("Sessão expirada");
+        setIsLoading(false);
+        redirect("/authentication");
+      } else if (res.status === 404) {
+        toast.error("Clínica não encontrada");
+        setIsLoading(false);
+      } else {
+        toast.error("Erro ao selecionar clínica");
+        setIsLoading(false);
+      }
+    });
+  };
 
   return (
     <div>
       <Card
-        className={`flex max-h-[210px] min-h-[210px] flex-col gap-2 overflow-y-auto p-4 ${clinics.length === 0 ? "justify-center" : ""}`}
+        className={`flex max-h-[210px] min-h-[210px] flex-col gap-2 overflow-y-auto p-4 ${clinics.length === 0 || isLoading ? "justify-center" : ""}`}
       >
-        {clinics.length > 0 ? (
+        {isLoading ? (
+          <div className="flex h-full w-full items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin" />
+          </div>
+        ) : clinics.length > 0 ? (
           clinics.map((clinic) => (
             <Card
               key={clinic.clinicId}

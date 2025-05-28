@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { getClinicFromSession } from "@/app/actions/clinics/get-from-session";
 import {
   Card,
   CardContent,
@@ -24,6 +25,12 @@ export default async function ClinicsSelectPage() {
 
   if (!session) {
     return redirect("/authentication");
+  }
+
+  const clinicFromSession = await getClinicFromSession();
+
+  if (clinicFromSession) {
+    return redirect("/dashboard");
   }
 
   const clinics = await db.query.usersToClinicsTable.findMany({

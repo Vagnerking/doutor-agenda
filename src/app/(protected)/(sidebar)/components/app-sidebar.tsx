@@ -9,7 +9,8 @@ import {
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -66,8 +67,23 @@ export function AppSidebar() {
     }
   };
 
-  const handleSelectClinic = () => {
-    router.push("/clinics/select");
+  const handleSelectClinic = async () => {
+    await fetch("/api/clinics/set-clinic", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clinicId: null }),
+    }).then((res) => {
+      if (res.status === 200) {
+        redirect("/clinics/select");
+      } else if (res.status === 401) {
+        toast.error("Sessão expirada");
+        redirect("/authentication");
+      } else if (res.status === 404) {
+        toast.error("Clínica não encontrada");
+      } else {
+        toast.error("Erro ao selecionar clínica");
+      }
+    });
   };
 
   return (
