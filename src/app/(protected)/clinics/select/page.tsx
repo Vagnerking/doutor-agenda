@@ -1,9 +1,7 @@
 import { eq } from "drizzle-orm";
-import { Plus } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -17,6 +15,7 @@ import { usersToClinicsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 import ClinicsList from "./components/clinics-list";
+import CreateClinic from "./components/create-clinic";
 
 export default async function ClinicsSelectPage() {
   const session = await auth.api.getSession({
@@ -35,7 +34,7 @@ export default async function ClinicsSelectPage() {
   });
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center">
+    <div className="flex h-screen w-screen items-center justify-center bg-slate-100">
       <Card className="w-[500px]">
         <CardHeader>
           <CardTitle>Bem vindo, {session.user.name}</CardTitle>
@@ -45,10 +44,7 @@ export default async function ClinicsSelectPage() {
           <ClinicsList clinics={clinics} />
         </CardContent>
         <CardFooter>
-          <Button>
-            <Plus />
-            Adicionar clínica
-          </Button>
+          <CreateClinic />
         </CardFooter>
       </Card>
     </div>

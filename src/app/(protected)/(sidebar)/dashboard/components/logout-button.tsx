@@ -1,9 +1,10 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
 import { LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -12,8 +13,10 @@ export default function LogoutButton() {
     <Button
       variant="outline"
       onClick={async () => {
-        (await authClient.signOut()).data?.success &&
+        const response = await authClient.signOut();
+        if (response.data?.success) {
           router.push("/authentication");
+        }
       }}
     >
       <LogOutIcon className="h-4 w-4" />
