@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 
-import { createClinic } from "@/app/actions/clinics/create-clinic";
+import { createClinic } from "@/app/actions/clinics/create";
 import {
   AlertDialog,
   AlertDialogAction,

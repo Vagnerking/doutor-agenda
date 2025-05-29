@@ -16,6 +16,16 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
   },
+  plugins: [
+    {
+      id: "clinicData",
+      $Infer: {
+        session: {
+          clinicData: { type: "string", nullable: true },
+        },
+      },
+    },
+  ],
   emailAndPassword: {
     enabled: true,
   },

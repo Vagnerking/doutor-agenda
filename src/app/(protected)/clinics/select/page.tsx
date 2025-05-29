@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getClinicFromSession } from "@/app/actions/clinics/get-from-session";
 import {
   Card,
   CardContent,
@@ -19,22 +18,22 @@ import ClinicsList from "./components/clinics-list";
 import CreateClinic from "./components/create-clinic";
 
 export default async function ClinicsSelectPage() {
-  const session = await auth.api.getSession({
+  const result = await auth.api.getSession({
     headers: await headers(),
   });
 
-  if (!session) {
+  if (!result) {
     return redirect("/authentication");
   }
 
-  const clinicFromSession = await getClinicFromSession();
+  const clinic = result.session.clinicData;
 
-  if (clinicFromSession) {
+  if (clinic) {
     return redirect("/dashboard");
   }
 
   const clinics = await db.query.usersToClinicsTable.findMany({
-    where: eq(usersToClinicsTable.userId, session.user.id),
+    where: eq(usersToClinicsTable.userId, result.user.id),
     with: {
       clinic: true,
     },
@@ -44,7 +43,7 @@ export default async function ClinicsSelectPage() {
     <div className="flex h-screen w-screen items-center justify-center bg-slate-100">
       <Card className="w-[500px]">
         <CardHeader>
-          <CardTitle>Bem vindo, {session.user.name}</CardTitle>
+          <CardTitle>Bem vindo, {result.user.name}</CardTitle>
           <CardDescription>Escolha uma clínica para continuar</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

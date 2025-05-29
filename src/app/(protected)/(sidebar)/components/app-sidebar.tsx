@@ -9,10 +9,12 @@ import {
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
-import { redirect, useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { getClinicFromClientSession } from "@/app/actions/clinics/get-from-client-session";
+import { getUserFromClientSession } from "@/app/actions/user/get-from-client-session";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,12 +60,13 @@ const items = [
 ];
 
 export function AppSidebar() {
-  const router = useRouter();
+  const clinic = getClinicFromClientSession();
+  const user = getUserFromClientSession();
 
   const handleSignOut = async () => {
     const response = await authClient.signOut();
     if (response.data?.success) {
-      router.push("/authentication");
+      redirect("/authentication");
     }
   };
 
@@ -115,7 +118,17 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button>Clínica</Button>
+                <SidebarMenuButton>
+                  <Avatar>
+                    <AvatarFallback>F</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm">{clinic?.name}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {user?.email}
+                    </p>
+                  </div>
+                </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleSelectClinic}>
