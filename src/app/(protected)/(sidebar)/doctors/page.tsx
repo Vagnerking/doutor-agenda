@@ -1,6 +1,3 @@
-import { Plus } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import {
   PageActions,
   PageContainer,
@@ -11,6 +8,8 @@ import {
   PageTitle,
 } from "@/components/ui/page-container";
 
+import { AddDoctorButton } from "./components/add-doctor-button";
+
 export default function DoctorsPage() {
   return (
     <PageContainer>
@@ -20,10 +19,7 @@ export default function DoctorsPage() {
           <PageDescription>Gerencie os médicos da sua clínica</PageDescription>
         </PageHeaderContent>
         <PageActions>
-          <Button>
-            <Plus />
-            Adicionar médico
-          </Button>
+          <AddDoctorButton />
         </PageActions>
       </PageHeader>
       <PageContent>Médicos</PageContent>

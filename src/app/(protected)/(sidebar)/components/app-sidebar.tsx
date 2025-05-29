@@ -86,7 +86,7 @@ export function AppSidebar() {
       } else if (res.status === 404) {
         toast.error("Clínica não encontrada");
       } else {
-        toast.error("Erro ao selecionar clínica");
+        toast.error("Erro ao sair da clínica");
       }
     });
   };
