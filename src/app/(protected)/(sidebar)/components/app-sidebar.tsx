@@ -9,7 +9,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
-import { redirect } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 import { getClinicFromClientSession } from "@/app/actions/clinics/get-from-client-session";
@@ -63,6 +63,8 @@ export function AppSidebar() {
   const clinic = getClinicFromClientSession();
   const user = getUserFromClientSession();
 
+  const pathname = usePathname();
+
   const handleSignOut = async () => {
     const response = await authClient.signOut();
     if (response.data?.success) {
@@ -101,7 +103,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild isActive={pathname === item.url}>
                     <a href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -118,7 +120,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
+                <SidebarMenuButton size="lg">
                   <Avatar>
                     <AvatarFallback>F</AvatarFallback>
                   </Avatar>
