@@ -1,10 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
+import { toast } from "sonner";
 import z from "zod";
 
+import { upsertDoctor } from "@/app/actions/doctors/upsert";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
@@ -37,7 +40,7 @@ import { medicalSpecialties } from "../constants";
 const formSchema = z
   .object({
     name: z.string().min(1, { message: "Nome é obrigatório" }),
-    speciality: z.string().min(1, { message: "Especialidade é obrigatória" }),
+    specialty: z.string().min(1, { message: "Especialidade é obrigatória" }),
     appointmentPrice: z.number().min(1, { message: "Preço é obrigatório" }),
     availableFromWeekDay: z.string(),
     availableToWeekDay: z.string(),
@@ -59,12 +62,16 @@ const formSchema = z
     },
   );
 
-export function UpsertDoctorForm() {
+interface UpsertDoctorFormProps {
+  closeDialog?: () => void;
+}
+
+export function UpsertDoctorForm({ closeDialog }: UpsertDoctorFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      speciality: "",
+      specialty: "",
       appointmentPrice: 0,
       availableFromWeekDay: "0",
       availableToWeekDay: "0",
@@ -73,8 +80,25 @@ export function UpsertDoctorForm() {
     },
   });
 
+  const upsertDoctorAction = useAction(upsertDoctor, {
+    onSuccess: () => {
+      toast.success("Médico adicionado com sucesso");
+      closeDialog?.();
+    },
+    onError: () => {
+      toast.error("Erro ao adicionar médico");
+    },
+  });
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    upsertDoctorAction.execute({
+      ...values,
+      availableFromWeekDay: parseInt(values.availableFromWeekDay),
+      availableToWeekDay: parseInt(values.availableToWeekDay),
+      appointmentPriceInCents: values.appointmentPrice * 100,
+    });
+
+    form.reset();
   }
 
   return (
@@ -106,7 +130,7 @@ export function UpsertDoctorForm() {
 
           <FormField
             control={form.control}
-            name="speciality"
+            name="specialty"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Especialidade</FormLabel>
@@ -358,7 +382,9 @@ export function UpsertDoctorForm() {
           />
 
           <DialogFooter className="mt-4">
-            <Button type="submit">Adicionar</Button>
+            <Button type="submit" disabled={upsertDoctorAction.isPending}>
+              {upsertDoctorAction.isPending ? "Adicionando..." : "Adicionar"}
+            </Button>
           </DialogFooter>
         </form>
       </Form>
