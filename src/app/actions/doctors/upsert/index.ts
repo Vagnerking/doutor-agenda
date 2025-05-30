@@ -2,13 +2,14 @@
 
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
 import { db } from "@/db";
 import { doctorsTable } from "@/db/schema";
+import { convertClinicDatFromServerSession } from "@/helpers/clinic/clinic-helper";
 import { auth } from "@/lib/auth";
 import { actionClient } from "@/lib/safe-action";
-import { convertClinicDatFromServerSession } from "@/utils/clinic/clinic-helper";
 
 import { upsertDoctorSchema } from "./schema";
 
@@ -65,4 +66,6 @@ export const upsertDoctor = actionClient
           availableToTime: availableToTimeUTC.format("HH:mm:ss"),
         },
       });
+
+    revalidatePath("/doctors");
   });

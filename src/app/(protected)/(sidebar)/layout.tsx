@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { convertClinicDatFromServerSession } from "@/helpers/clinic/clinic-helper";
 import { auth } from "@/lib/auth";
 
 import { AppSidebar } from "./components/app-sidebar";
@@ -19,7 +20,11 @@ export default async function Layout({
     redirect("/authentication");
   }
 
-  if (!result.session.clinicData) {
+  const clinicData = convertClinicDatFromServerSession(
+    result.session.clinicData ?? "",
+  );
+
+  if (!clinicData) {
     redirect("/clinics/select");
   }
 
