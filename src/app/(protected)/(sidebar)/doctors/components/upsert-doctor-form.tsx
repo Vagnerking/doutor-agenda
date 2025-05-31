@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { toast } from "sonner";
@@ -87,6 +88,22 @@ export function UpsertDoctorForm({
       availableToTime: doctor?.availableToTime ?? "",
     },
   });
+
+  useEffect(() => {
+    if (doctor) {
+      form.reset({
+        name: doctor?.name ?? "",
+        specialty: doctor?.specialty ?? "",
+        appointmentPrice: doctor?.appointmentPriceInCents
+          ? doctor.appointmentPriceInCents / 100
+          : 0,
+        availableFromWeekDay: doctor?.availableFromWeekDay?.toString() ?? "1",
+        availableToWeekDay: doctor?.availableToWeekDay?.toString() ?? "5",
+        availableFromTime: doctor?.availableFromTime ?? "",
+        availableToTime: doctor?.availableToTime ?? "",
+      });
+    }
+  }, [form, doctor, closeDialog]);
 
   const upsertDoctorAction = useAction(upsertDoctor, {
     onSuccess: () => {
@@ -186,6 +203,7 @@ export function UpsertDoctorForm({
                   thousandSeparator="."
                   customInput={Input}
                   prefix="R$ "
+                  onFocus={(e) => e.target.select()}
                 />
                 <FormMessage />
               </FormItem>

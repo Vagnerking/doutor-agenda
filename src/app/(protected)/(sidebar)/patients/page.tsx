@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { DataTable } from "@/components/ui/data-table";
 import {
   PageActions,
   PageContainer,
@@ -14,14 +15,13 @@ import {
   PageTitle,
 } from "@/components/ui/page-container";
 import { db } from "@/db";
-import { doctorsTable } from "@/db/schema";
+import { patientsTable } from "@/db/schema";
 import { convertClinicDatFromServerSession } from "@/helpers/clinic/clinic-helper";
 import { auth } from "@/lib/auth";
 
-import { AddDoctorButton } from "./components/add-doctor-button";
-import DoctorCard from "./components/doctor-card";
-
-export default async function DoctorsPage() {
+import { AddPatientButton } from "./components/add-patient-button";
+import { patientsTableColumns } from "./components/patient-table-columns";
+export default async function PatientsPage() {
   const result = await auth.api.getSession({
     headers: await headers(),
   });
@@ -38,27 +38,25 @@ export default async function DoctorsPage() {
     redirect("/clinics/select");
   }
 
-  const doctors = await db.query.doctorsTable.findMany({
-    where: eq(doctorsTable.clinicId, clinicData.id),
+  const patients = await db.query.patientsTable.findMany({
+    where: eq(patientsTable.clinicId, clinicData.id),
   });
 
   return (
     <PageContainer>
       <PageHeader>
         <PageHeaderContent>
-          <PageTitle>Médicos</PageTitle>
-          <PageDescription>Gerencie os médicos da sua clínica</PageDescription>
+          <PageTitle>Pacientes</PageTitle>
+          <PageDescription>
+            Gerencie os pacientes da sua clínica
+          </PageDescription>
         </PageHeaderContent>
         <PageActions>
-          <AddDoctorButton />
+          <AddPatientButton />
         </PageActions>
       </PageHeader>
       <PageContent>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {doctors.map((doctor) => (
-            <DoctorCard key={doctor.id} doctor={doctor} />
-          ))}
-        </div>
+        <DataTable columns={patientsTableColumns} data={patients} />
       </PageContent>
     </PageContainer>
   );
