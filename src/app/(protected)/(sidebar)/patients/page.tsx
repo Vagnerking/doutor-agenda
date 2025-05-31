@@ -20,7 +20,7 @@ import { convertClinicDatFromServerSession } from "@/helpers/clinic/clinic-helpe
 import { auth } from "@/lib/auth";
 
 import { AddPatientButton } from "./components/add-patient-button";
-import { patientsTableColumns } from "./components/patient-table-columns";
+import { patientsTableColumns } from "./components/patients-table-columns";
 export default async function PatientsPage() {
   const result = await auth.api.getSession({
     headers: await headers(),

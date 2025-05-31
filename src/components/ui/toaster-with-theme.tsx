@@ -8,7 +8,7 @@ export function ToasterWithTheme() {
   const { resolvedTheme } = useTheme();
   return (
     <Toaster
-      position="top-center"
+      position="bottom-center"
       richColors
       theme={resolvedTheme as "light" | "dark" | "system"}
     />
