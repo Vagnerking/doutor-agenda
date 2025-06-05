@@ -30,9 +30,19 @@ export const createAppointmentsTableColumns = ({
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
       });
+    },
+  },
+  {
+    id: "time",
+    accessorKey: "time",
+    header: "Horário",
+    cell: (params) => {
+      const time = params.row.original.time;
+      if (!time) return "Não informado";
+
+      const [hours, minutes] = time.split(":");
+      return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
     },
   },
   {

@@ -14,29 +14,42 @@ import { createAppointmentSchema } from "./schema";
 export const createAppointment = actionClient
   .schema(createAppointmentSchema)
   .action(async ({ parsedInput }) => {
-    const result = await auth.api.getSession({
-      headers: await headers(),
-    });
+    try {
+      const result = await auth.api.getSession({
+        headers: await headers(),
+      });
 
-    if (!result) {
-      throw new Error("Unauthorized");
+      if (!result) {
+        throw new Error("Unauthorized");
+      }
+
+      const clinic = convertClinicDatFromServerSession(
+        result.session.clinicData ?? "",
+      );
+
+      if (!clinic) {
+        throw new Error("Clinic not found");
+      }
+
+      console.log("Criando agendamento:", {
+        clinicId: clinic.id,
+        ...parsedInput,
+      });
+
+      await db.insert(appointmentsTable).values({
+        clinicId: clinic.id,
+        patientId: parsedInput.patientId,
+        doctorId: parsedInput.doctorId,
+        date: parsedInput.date,
+        time: parsedInput.time,
+        appointmentPriceInCents: parsedInput.appointmentPriceInCents,
+      });
+
+      revalidatePath("/appointments");
+
+      return { success: true };
+    } catch (error) {
+      console.error("Erro na action createAppointment:", error);
+      throw error;
     }
-
-    const clinic = convertClinicDatFromServerSession(
-      result.session.clinicData ?? "",
-    );
-
-    if (!clinic) {
-      throw new Error("Clinic not found");
-    }
-
-    await db.insert(appointmentsTable).values({
-      clinicId: clinic.id,
-      patientId: parsedInput.patientId,
-      doctorId: parsedInput.doctorId,
-      date: parsedInput.date,
-      appointmentPriceInCents: parsedInput.appointmentPriceInCents,
-    });
-
-    revalidatePath("/appointments");
   });

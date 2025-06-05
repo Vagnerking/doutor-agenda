@@ -19,9 +19,18 @@ export function AddAppointmentButton({
   doctors,
 }: UpsertAppointmentDialogProps) {
   const [open, setOpen] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen) {
+      // Gera uma nova key para forçar reset do formulário
+      setFormKey((prev) => prev + 1);
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -29,6 +38,7 @@ export function AddAppointmentButton({
         </Button>
       </DialogTrigger>
       <UpsertAppointmentForm
+        key={formKey.toString()}
         patients={patients}
         doctors={doctors}
         closeDialog={() => setOpen(false)}

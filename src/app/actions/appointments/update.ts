@@ -10,6 +10,7 @@ import { appointmentsTable } from "@/db/schema";
 const updateAppointmentSchema = z.object({
   id: z.string(),
   date: z.date(),
+  time: z.string(),
   patientId: z.string(),
   doctorId: z.string(),
   appointmentPriceInCents: z.number(),
@@ -18,17 +19,19 @@ const updateAppointmentSchema = z.object({
 export async function updateAppointment(
   data: z.infer<typeof updateAppointmentSchema>,
 ) {
+  const validatedData = updateAppointmentSchema.parse(data);
   try {
     await db
       .update(appointmentsTable)
       .set({
-        date: data.date,
-        patientId: data.patientId,
-        doctorId: data.doctorId,
-        appointmentPriceInCents: data.appointmentPriceInCents,
+        date: validatedData.date,
+        time: validatedData.time,
+        patientId: validatedData.patientId,
+        doctorId: validatedData.doctorId,
+        appointmentPriceInCents: validatedData.appointmentPriceInCents,
         updatedAt: new Date(),
       })
-      .where(eq(appointmentsTable.id, data.id));
+      .where(eq(appointmentsTable.id, validatedData.id));
 
     revalidatePath("/appointments");
     return { data: { success: true } };

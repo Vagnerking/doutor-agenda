@@ -44,6 +44,7 @@ export default function AppointmentsTableActions({
   doctors,
 }: AppointmentsTableActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   const deleteAppointmentAction = useAction(deleteAppointment, {
     onSuccess: () => {
@@ -59,8 +60,16 @@ export default function AppointmentsTableActions({
     deleteAppointmentAction.execute({ id: appointment.id });
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setIsOpen(newOpen);
+    if (newOpen) {
+      // Gera uma nova key para forçar reset do formulário
+      setFormKey((prev) => prev + 1);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
@@ -111,6 +120,7 @@ export default function AppointmentsTableActions({
       </DropdownMenu>
 
       <UpsertAppointmentForm
+        key={formKey.toString()}
         appointment={appointment}
         patients={patients}
         doctors={doctors}

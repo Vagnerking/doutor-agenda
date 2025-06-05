@@ -42,13 +42,11 @@ export default async function AppointmentsPage() {
       .from(patientsTable)
       .where(eq(patientsTable.clinicId, clinic.id)),
     db.select().from(doctorsTable).where(eq(doctorsTable.clinicId, clinic.id)),
-    db.query.appointmentsTable.findMany({
-      where: eq(appointmentsTable.clinicId, clinic.id),
-      with: {
-        patient: true,
-        doctor: true,
-      },
-    }),
+    // Buscar agendamentos usando select direto para evitar problemas com relações
+    db
+      .select()
+      .from(appointmentsTable)
+      .where(eq(appointmentsTable.clinicId, clinic.id)),
   ]);
 
   return (
@@ -65,11 +63,45 @@ export default async function AppointmentsPage() {
         </PageActions>
       </PageHeader>
       <PageContent>
-        <AppointmentsTable
-          appointments={appointments}
-          patients={patients}
-          doctors={doctors}
-        />
+        {appointments.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-muted-foreground">
+              Nenhum agendamento encontrado. Crie seu primeiro agendamento!
+            </p>
+          </div>
+        ) : (
+          <AppointmentsTable
+            appointments={appointments.map((appointment) => ({
+              ...appointment,
+              patient: patients.find((p) => p.id === appointment.patientId) || {
+                id: appointment.patientId,
+                name: "Paciente não encontrado",
+                email: "",
+                phoneNumber: "",
+                sex: "male" as const,
+                clinicId: clinic.id,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              },
+              doctor: doctors.find((d) => d.id === appointment.doctorId) || {
+                id: appointment.doctorId,
+                name: "Médico não encontrado",
+                specialty: "",
+                appointmentPriceInCents: 0,
+                availableFromWeekDay: 1,
+                availableToWeekDay: 5,
+                availableFromTime: "08:00:00",
+                availableToTime: "17:00:00",
+                clinicId: clinic.id,
+                avatarImageUrl: null,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              },
+            }))}
+            patients={patients}
+            doctors={doctors}
+          />
+        )}
       </PageContent>
     </PageContainer>
   );
