@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { toast } from "sonner";
@@ -91,7 +91,7 @@ export function UpsertAppointmentForm({
   });
 
   // Normaliza o horário para o formato HH:mm se necessário
-  const normalizeTime = (timeStr: string | null) => {
+  const normalizeTime = useCallback((timeStr: string | null) => {
     if (!timeStr) return "";
 
     // Se o horário tem formato HH:mm:ss, extrai apenas HH:mm
@@ -100,7 +100,7 @@ export function UpsertAppointmentForm({
       return `${parts[0]}:${parts[1]}`;
     }
     return timeStr;
-  };
+  }, []);
 
   // Reset form quando o componente é montado ou quando appointment muda
   useEffect(() => {
@@ -129,7 +129,7 @@ export function UpsertAppointmentForm({
         appointmentPrice: "",
       });
     }
-  }, [appointment, form]);
+  }, [appointment, form, normalizeTime]);
 
   const selectedDoctorId = form.watch("doctorId");
   const selectedDate = form.watch("date");

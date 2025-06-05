@@ -1,6 +1,8 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 
@@ -21,33 +23,25 @@ export const createAppointmentsTableColumns = ({
   doctors,
 }: AppointmentsTableColumnsProps): ColumnDef<AppointmentWithRelations>[] => [
   {
-    id: "date",
+    id: "dateTime",
     accessorKey: "date",
     header: "Data",
     cell: (params) => {
-      const date = new Date(params.row.original.date);
-      return date.toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-    },
-  },
-  {
-    id: "time",
-    accessorKey: "time",
-    header: "Horário",
-    cell: (params) => {
-      const time = params.row.original.time;
-      if (!time) return "Não informado";
+      const appointment = params.row.original;
+      const date = new Date(appointment.date);
 
-      const [hours, minutes] = time.split(":");
-      return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+      // Se há horário, adiciona à data
+      if (appointment.time) {
+        const [hours, minutes] = appointment.time.split(":");
+        date.setHours(parseInt(hours), parseInt(minutes));
+      }
+
+      return format(date, "PPPP", { locale: ptBR });
     },
   },
   {
     id: "patient",
-    accessorKey: "patient",
+    accessorKey: "patient.name",
     header: "Paciente",
     cell: (params) => {
       return params.row.original.patient?.name;
@@ -55,10 +49,18 @@ export const createAppointmentsTableColumns = ({
   },
   {
     id: "doctor",
-    accessorKey: "doctor",
+    accessorKey: "doctor.name",
     header: "Médico",
     cell: (params) => {
       return params.row.original.doctor?.name;
+    },
+  },
+  {
+    id: "specialty",
+    accessorKey: "doctor.specialty",
+    header: "Especialidade",
+    cell: (params) => {
+      return params.row.original.doctor?.specialty;
     },
   },
   {
@@ -71,6 +73,14 @@ export const createAppointmentsTableColumns = ({
         style: "currency",
         currency: "BRL",
       }).format(price / 100);
+    },
+  },
+  {
+    id: "status",
+    accessorKey: "status",
+    header: "Status",
+    cell: () => {
+      return "Confirmado";
     },
   },
   {
