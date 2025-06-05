@@ -1,8 +1,9 @@
-import { EditIcon, MoreVerticalIcon, TrashIcon } from "lucide-react";
+import { EditIcon, MoreVerticalIcon, TrashIcon, XIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { cancelAppointment } from "@/actions/appointments/cancel";
 import { deleteAppointment } from "@/app/actions/appointments/delete";
 import {
   AlertDialog,
@@ -36,12 +37,14 @@ interface AppointmentsTableActionsProps {
   };
   patients: (typeof patientsTable.$inferSelect)[];
   doctors: (typeof doctorsTable.$inferSelect)[];
+  allAppointments: (typeof appointmentsTable.$inferSelect)[];
 }
 
 export default function AppointmentsTableActions({
   appointment,
   patients,
   doctors,
+  allAppointments,
 }: AppointmentsTableActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
@@ -55,9 +58,23 @@ export default function AppointmentsTableActions({
     },
   });
 
+  const cancelAppointmentAction = useAction(cancelAppointment, {
+    onSuccess: () => {
+      toast.success("Agendamento cancelado com sucesso");
+    },
+    onError: () => {
+      toast.error("Erro ao cancelar agendamento");
+    },
+  });
+
   const handleDeleteAppointment = () => {
     if (!appointment) return;
     deleteAppointmentAction.execute({ id: appointment.id });
+  };
+
+  const handleCancelAppointment = () => {
+    if (!appointment) return;
+    cancelAppointmentAction.execute({ id: appointment.id });
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -67,6 +84,8 @@ export default function AppointmentsTableActions({
       setFormKey((prev) => prev + 1);
     }
   };
+
+  const isCancelled = appointment.status === "cancelled";
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -79,10 +98,53 @@ export default function AppointmentsTableActions({
         <DropdownMenuContent>
           <DropdownMenuLabel>Agendamento</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setIsOpen(true)}>
-            <EditIcon />
-            Editar
-          </DropdownMenuItem>
+
+          {/* Só permite editar se não estiver cancelado */}
+          {!isCancelled && (
+            <DropdownMenuItem onClick={() => setIsOpen(true)}>
+              <EditIcon />
+              Editar
+            </DropdownMenuItem>
+          )}
+
+          {/* Só permite cancelar se não estiver cancelado */}
+          {!isCancelled && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  <XIcon />
+                  Cancelar
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-medium">
+                    Tem certeza que deseja cancelar este agendamento?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    O agendamento será marcado como cancelado e não poderá mais
+                    ser editado.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Voltar</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-orange-600 text-white hover:bg-orange-700"
+                    asChild
+                  >
+                    <Button
+                      onClick={handleCancelAppointment}
+                      className="font-bold"
+                    >
+                      Cancelar Agendamento
+                    </Button>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+
+          {/* Sempre permite excluir */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -119,13 +181,17 @@ export default function AppointmentsTableActions({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <UpsertAppointmentForm
-        key={formKey.toString()}
-        appointment={appointment}
-        patients={patients}
-        doctors={doctors}
-        closeDialog={() => setIsOpen(false)}
-      />
+      {/* Só renderiza o formulário se não estiver cancelado */}
+      {!isCancelled && (
+        <UpsertAppointmentForm
+          key={formKey.toString()}
+          appointment={appointment}
+          patients={patients}
+          doctors={doctors}
+          allAppointments={allAppointments}
+          closeDialog={() => setIsOpen(false)}
+        />
+      )}
     </Dialog>
   );
 }

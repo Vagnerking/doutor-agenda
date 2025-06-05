@@ -5,24 +5,26 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { doctorsTable, patientsTable } from "@/db/schema";
+import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 
 import { UpsertAppointmentForm } from "./upsert-appointment-form";
 
 interface UpsertAppointmentDialogProps {
   patients: (typeof patientsTable.$inferSelect)[];
   doctors: (typeof doctorsTable.$inferSelect)[];
+  allAppointments: (typeof appointmentsTable.$inferSelect)[];
 }
 
 export function AddAppointmentButton({
   patients,
   doctors,
+  allAppointments,
 }: UpsertAppointmentDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
   const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
+    setIsOpen(newOpen);
     if (newOpen) {
       // Gera uma nova key para forçar reset do formulário
       setFormKey((prev) => prev + 1);
@@ -30,18 +32,20 @@ export function AddAppointmentButton({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo agendamento
+          <Plus />
+          Novo Agendamento
         </Button>
       </DialogTrigger>
+
       <UpsertAppointmentForm
         key={formKey.toString()}
         patients={patients}
         doctors={doctors}
-        closeDialog={() => setOpen(false)}
+        allAppointments={allAppointments}
+        closeDialog={() => setIsOpen(false)}
       />
     </Dialog>
   );

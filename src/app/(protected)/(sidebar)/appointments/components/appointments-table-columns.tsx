@@ -16,11 +16,13 @@ type AppointmentWithRelations = typeof appointmentsTable.$inferSelect & {
 interface AppointmentsTableColumnsProps {
   patients: (typeof patientsTable.$inferSelect)[];
   doctors: (typeof doctorsTable.$inferSelect)[];
+  allAppointments: (typeof appointmentsTable.$inferSelect)[];
 }
 
 export const createAppointmentsTableColumns = ({
   patients,
   doctors,
+  allAppointments,
 }: AppointmentsTableColumnsProps): ColumnDef<AppointmentWithRelations>[] => [
   {
     id: "dateTime",
@@ -36,12 +38,12 @@ export const createAppointmentsTableColumns = ({
         date.setHours(parseInt(hours), parseInt(minutes));
       }
 
-      return format(date, "PPPP", { locale: ptBR });
+      return format(date, "PPP 'às' HH:mm", { locale: ptBR });
     },
   },
   {
     id: "patient",
-    accessorKey: "patient.name",
+    accessorKey: "patient",
     header: "Paciente",
     cell: (params) => {
       return params.row.original.patient?.name;
@@ -49,7 +51,7 @@ export const createAppointmentsTableColumns = ({
   },
   {
     id: "doctor",
-    accessorKey: "doctor.name",
+    accessorKey: "doctor",
     header: "Médico",
     cell: (params) => {
       return params.row.original.doctor?.name;
@@ -79,8 +81,18 @@ export const createAppointmentsTableColumns = ({
     id: "status",
     accessorKey: "status",
     header: "Status",
-    cell: () => {
-      return "Confirmado";
+    cell: (params) => {
+      const status = params.row.original.status;
+      const statusMap = {
+        confirmed: "Confirmado",
+        cancelled: "Cancelado",
+      };
+
+      const statusText = statusMap[status as keyof typeof statusMap] || status;
+      const statusColor =
+        status === "cancelled" ? "text-red-600" : "text-green-600";
+
+      return <span className={statusColor}>{statusText}</span>;
     },
   },
   {
@@ -92,6 +104,7 @@ export const createAppointmentsTableColumns = ({
           appointment={appointment}
           patients={patients}
           doctors={doctors}
+          allAppointments={allAppointments}
         />
       );
     },

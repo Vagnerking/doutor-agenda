@@ -59,7 +59,11 @@ export default async function AppointmentsPage() {
           </PageDescription>
         </PageHeaderContent>
         <PageActions>
-          <AddAppointmentButton patients={patients} doctors={doctors} />
+          <AddAppointmentButton
+            patients={patients}
+            doctors={doctors}
+            allAppointments={appointments}
+          />
         </PageActions>
       </PageHeader>
       <PageContent>

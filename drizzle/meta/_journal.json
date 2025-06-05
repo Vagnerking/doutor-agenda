@@ -8,6 +8,13 @@
       "when": 1749081404317,
       "tag": "0000_past_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1749091326033,
+      "tag": "0001_productive_shard",
+      "breakpoints": true
     }
   ]
 }

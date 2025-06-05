@@ -46,7 +46,7 @@ import {
 import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 import {
   formatPriceFromCents,
-  generateTimeSlots,
+  getAvailableTimeSlots,
   isDateValid,
   isDoctorAvailableOnDate,
   parsePriceToCents,
@@ -69,6 +69,7 @@ interface UpsertAppointmentFormProps {
   appointment?: typeof appointmentsTable.$inferSelect | undefined;
   patients: (typeof patientsTable.$inferSelect)[];
   doctors: (typeof doctorsTable.$inferSelect)[];
+  allAppointments: (typeof appointmentsTable.$inferSelect)[];
   closeDialog: () => void;
   key?: string; // Para forçar re-render quando necessário
 }
@@ -77,6 +78,7 @@ export function UpsertAppointmentForm({
   appointment,
   patients,
   doctors,
+  allAppointments,
   closeDialog,
 }: UpsertAppointmentFormProps) {
   const form = useForm<FormValues>({
@@ -142,7 +144,8 @@ export function UpsertAppointmentForm({
     if (
       !selectedDoctor ||
       !selectedDoctor.availableFromTime ||
-      !selectedDoctor.availableToTime
+      !selectedDoctor.availableToTime ||
+      !selectedDate
     ) {
       return [];
     }
@@ -162,8 +165,23 @@ export function UpsertAppointmentForm({
     const fromTime = normalizeTimeSlotsFormat(selectedDoctor.availableFromTime);
     const toTime = normalizeTimeSlotsFormat(selectedDoctor.availableToTime);
 
-    return generateTimeSlots(fromTime, toTime, 30);
-  }, [selectedDoctor]);
+    // Usa a nova função que filtra horários ocupados para a data específica
+    return getAvailableTimeSlots(
+      fromTime,
+      toTime,
+      allAppointments,
+      selectedDate,
+      selectedDoctorId,
+      appointment?.id, // Para permitir edição do próprio agendamento
+      30,
+    );
+  }, [
+    selectedDoctor,
+    selectedDate,
+    allAppointments,
+    selectedDoctorId,
+    appointment?.id,
+  ]);
 
   // Atualiza o horário quando os slots ficam disponíveis (apenas no modo edição)
   useEffect(() => {
@@ -227,8 +245,30 @@ export function UpsertAppointmentForm({
     if (selectedDoctorId && !appointment) {
       form.setValue("patientId", "");
       form.setValue("time", "");
+
+      // Verifica se a data atual é válida para o novo médico
+      const currentDate = form.getValues("date");
+      if (currentDate && selectedDoctor) {
+        const dayOfWeek = currentDate.getDay();
+        const doctorDayFormat = dayOfWeek === 0 ? 7 : dayOfWeek;
+
+        // Se a data não é válida para o médico, limpa a data
+        if (
+          doctorDayFormat < selectedDoctor.availableFromWeekDay ||
+          doctorDayFormat > selectedDoctor.availableToWeekDay
+        ) {
+          form.resetField("date");
+        }
+      }
     }
-  }, [selectedDoctorId, form, appointment]);
+  }, [selectedDoctorId, selectedDoctor, form, appointment]);
+
+  // Reseta o horário quando a data muda (apenas no modo criação)
+  useEffect(() => {
+    if (selectedDate && !appointment) {
+      form.setValue("time", "");
+    }
+  }, [selectedDate, form, appointment]);
 
   // Valida data quando muda
   useEffect(() => {
@@ -391,7 +431,11 @@ export function UpsertAppointmentForm({
                         {field.value ? (
                           format(field.value, "PPP", { locale: ptBR })
                         ) : (
-                          <span>Selecione uma data</span>
+                          <span>
+                            {selectedDoctor
+                              ? "Selecione uma data (apenas dias úteis do médico)"
+                              : "Selecione uma data"}
+                          </span>
                         )}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -405,7 +449,26 @@ export function UpsertAppointmentForm({
                       disabled={(date) => {
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
-                        return date < today;
+
+                        // Desabilita datas passadas
+                        if (date < today) {
+                          return true;
+                        }
+
+                        // Se não há médico selecionado, permite qualquer data futura
+                        if (!selectedDoctor) {
+                          return false;
+                        }
+
+                        // Verifica se o médico trabalha neste dia da semana
+                        const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                        const doctorDayFormat = dayOfWeek === 0 ? 7 : dayOfWeek; // Convert to match doctor's format (1 = Monday, 7 = Sunday)
+
+                        return (
+                          doctorDayFormat <
+                            selectedDoctor.availableFromWeekDay ||
+                          doctorDayFormat > selectedDoctor.availableToWeekDay
+                        );
                       }}
                       initialFocus
                       locale={ptBR}

@@ -19,7 +19,25 @@ export function AppointmentsTable({
   patients,
   doctors,
 }: AppointmentsTableProps) {
-  const columns = createAppointmentsTableColumns({ patients, doctors });
+  // Extrai apenas os dados básicos dos agendamentos para verificação de horários
+  const allAppointments = appointments.map((item) => ({
+    id: item.id,
+    date: item.date,
+    time: item.time,
+    status: item.status,
+    appointmentPriceInCents: item.appointmentPriceInCents,
+    patientId: item.patientId,
+    doctorId: item.doctorId,
+    clinicId: item.clinicId,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+  }));
+
+  const columns = createAppointmentsTableColumns({
+    patients,
+    doctors,
+    allAppointments,
+  });
 
   return <DataTable columns={columns} data={appointments} />;
 }
