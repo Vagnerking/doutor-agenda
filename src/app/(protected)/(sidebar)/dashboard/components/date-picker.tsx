@@ -17,6 +17,13 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
+function parseLocalDate(dateStr: string | Date | null | undefined): Date | undefined {
+  if (!dateStr) return undefined;
+  if (dateStr instanceof Date) return dateStr;
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function DatePicker({
   className,
 }: React.HTMLAttributes<HTMLDivElement>) {
@@ -31,11 +38,15 @@ export function DatePicker({
 
   const handleDateChange = (dateRange: DateRange | undefined) => {
     if (dateRange?.from) {
-      setFrom(dateRange.from);
+      setFrom(dayjs(dateRange.from).startOf("day").toDate(), {
+        shallow: false,
+      });
     }
 
     if (dateRange?.to) {
-      setTo(dateRange.to);
+      setTo(dayjs(dateRange.to).startOf("day").toDate(), {
+        shallow: false,
+      });
     }
   };
 
@@ -60,11 +71,11 @@ export function DatePicker({
             {date?.from ? (
               date.to ? (
                 <>
-                  {dayjs(date.from).format("DD/MM/YYYY")} {" à "}
-                  {dayjs(date.to).format("DD/MM/YYYY")}
+                  {dayjs(parseLocalDate(date.from)).format("DD/MM/YYYY")} {" à "}
+                  {dayjs(parseLocalDate(date.to)).format("DD/MM/YYYY")}
                 </>
               ) : (
-                dayjs(date.from).format("DD/MM/YYYY")
+                dayjs(parseLocalDate(date.from)).format("DD/MM/YYYY")
               )
             ) : (
               <span>Selecione uma data</span>

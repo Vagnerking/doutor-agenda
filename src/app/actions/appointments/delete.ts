@@ -15,7 +15,10 @@ export async function deleteAppointment(
   data: z.infer<typeof deleteAppointmentSchema>,
 ) {
   try {
-    await db.delete(appointmentsTable).where(eq(appointmentsTable.id, data.id));
+    const validatedData = deleteAppointmentSchema.parse(data);
+    await db
+      .delete(appointmentsTable)
+      .where(eq(appointmentsTable.id, validatedData.id));
     revalidatePath("/appointments");
     return { data: { success: true } };
   } catch (error) {
