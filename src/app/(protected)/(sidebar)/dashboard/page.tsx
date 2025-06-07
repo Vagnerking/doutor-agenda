@@ -1,5 +1,4 @@
 import dayjs from "dayjs";
-import { and, count, eq, gte, lte, sql, sum } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -12,14 +11,14 @@ import {
   PageHeaderContent,
   PageTitle,
 } from "@/components/ui/page-container";
-import { db } from "@/db";
-import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
+import { getDashboard } from "@/data/getDashboard";
 import { auth } from "@/lib/auth";
 import { Clinic } from "@/types/clinic";
 
 import { DatePicker } from "./components/date-picker";
 import { RevenueChart } from "./components/revenue-chart";
-import { StatsCard } from "./components/stats-card";
+import StatsCard from "./components/stats-card";
+import TopDoctors from "./components/top-doctors";
 
 interface DashboardPageProps {
   searchParams: Promise<{
@@ -49,53 +48,30 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   if (!clinicData) {
     redirect("/clinics/select");
   }
-  
-  const [
-    [{ totalRevenue }],
-    [{ totalAppointments }],
-    [{ totalPatients }],
-    [{ totalDoctors }]
-  ] = await Promise.all([
-    db.select({ totalRevenue: sum(appointmentsTable.appointmentPriceInCents) }).from(appointmentsTable).where(
-      and(
-        eq(appointmentsTable.clinicId, clinicData.id),
-        gte(appointmentsTable.date, dayjs(from, "YYYY-MM-DD").startOf("day").toDate()),
-        lte(appointmentsTable.date, dayjs(to, "YYYY-MM-DD").endOf("day").toDate()),
-        eq(appointmentsTable.status, "confirmed")
-      )
-    ),
-    db.select({ totalAppointments: count() }).from(appointmentsTable).where(
-      and(
-        eq(appointmentsTable.clinicId, clinicData.id),
-        gte(appointmentsTable.date, dayjs(from, "YYYY-MM-DD").startOf("day").toDate()),
-        lte(appointmentsTable.date, dayjs(to, "YYYY-MM-DD").endOf("day").toDate()),
-      )
-    ),
-    db.select({ totalPatients: count() }).from(patientsTable).where(
-      eq(patientsTable.clinicId, clinicData.id)
-    ),
-    db.select({ totalDoctors: count() }).from(doctorsTable).where(
-      eq(doctorsTable.clinicId, clinicData.id)
-    ),
-  ]);
 
   const chartStartDate = dayjs().subtract(10, "days").startOf("day").toDate();
   const chartEndDate = dayjs().add(10, "days").endOf("day").toDate();
 
-  const dailyAppointmentsData = await db.select({
-    date: sql<string>`DATE(${appointmentsTable.date})`.as("date"),
-    appointments: count(appointmentsTable.id),
-    revenue: sql<number>`COALESCE(SUM(${appointmentsTable.appointmentPriceInCents}), 0)`.as("revenue")
-  }).from(appointmentsTable)
-  .where(
-    and(
-      eq(appointmentsTable.clinicId, clinicData.id),
-      gte(appointmentsTable.date, chartStartDate),
-      lte(appointmentsTable.date, chartEndDate),
-    )
-  )
-  .groupBy(sql`DATE(${appointmentsTable.date})`)
-  .orderBy(sql`DATE(${appointmentsTable.date})`);
+  const {
+    totalRevenue,
+    totalAppointments,
+    totalPatients,
+    totalDoctors,
+    topDoctors,
+    topSpecialties,
+    todayAppointments,
+    dailyAppointmentsData,
+  } = await getDashboard({
+    from,
+    to,
+    session: {
+      user: {
+        clinic: {
+          id: clinicData.id,
+        },
+      },
+    },
+  });
 
   return (
     <PageContainer>
@@ -112,13 +88,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       </PageHeader>
       <PageContent>
         <StatsCard
-          totalRevenue={(Number(totalRevenue) / 100)}
-          totalAppointments={totalAppointments}
-          totalPatients={totalPatients}
-          totalDoctors={totalDoctors}
+          totalRevenue={totalRevenue.total ? Number(totalRevenue.total) : null}
+          totalAppointments={totalAppointments.total}
+          totalPatients={totalPatients.total}
+          totalDoctors={totalDoctors.total}
         />
-        <div className="grid grid-cols-[2.25fr_1fr]">
+        <div className="grid grid-cols-[2.25fr_1fr] gap-4">
           <RevenueChart dailyAppointmentsData={dailyAppointmentsData} />
+          <TopDoctors doctors={topDoctors}/>
         </div>
       </PageContent>
     </PageContainer>

@@ -1,75 +1,71 @@
-import { FaUserFriends,FaUserMd } from "react-icons/fa";
-import { MdAttachMoney,MdEventAvailable } from "react-icons/md";
+import {
+  CalendarIcon,
+  DollarSignIcon,
+  UserIcon,
+  UsersIcon,
+} from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrencyInCents } from "@/helpers/currency";
 
-interface StatsCardProps {
-  totalRevenue: number;
+interface StatsCardsProps {
+  totalRevenue: number | null;
   totalAppointments: number;
   totalPatients: number;
   totalDoctors: number;
 }
 
-const stats = [
-  {
-    label: "Faturamento",
-    icon: <MdAttachMoney className="text-blue-500 w-5 h-5" />, // dinheiro
-    getValue: (value: number) =>
-      value.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 }),
-    key: "totalRevenue",
-  },
-  {
-    label: "Agendamentos",
-    icon: <MdEventAvailable className="text-blue-500 w-5 h-5" />, // calendário
-    getValue: (value: number) => value,
-    key: "totalAppointments",
-  },
-  {
-    label: "Pacientes",
-    icon: <FaUserFriends className="text-blue-500 w-5 h-5" />, // pessoas
-    getValue: (value: number) => value,
-    key: "totalPatients",
-  },
-  {
-    label: "Médicos",
-    icon: <FaUserMd className="text-blue-500 w-5 h-5" />, // médico
-    getValue: (value: number) => value,
-    key: "totalDoctors",
-  },
-];
-
-export function StatsCard({ totalRevenue, totalAppointments, totalPatients, totalDoctors }: StatsCardProps) {
-  const values: Record<string, number> = {
-    totalRevenue,
-    totalAppointments,
-    totalPatients,
-    totalDoctors,
-  };
+const StatsCards = ({
+  totalRevenue,
+  totalAppointments,
+  totalPatients,
+  totalDoctors,
+}: StatsCardsProps) => {
+  const stats = [
+    {
+      title: "Faturamento",
+      value: totalRevenue ? formatCurrencyInCents(totalRevenue) : "R$ 0,00",
+      icon: DollarSignIcon,
+    },
+    {
+      title: "Agendamentos",
+      value: totalAppointments.toString(),
+      icon: CalendarIcon,
+    },
+    {
+      title: "Pacientes",
+      value: totalPatients.toString(),
+      icon: UserIcon,
+    },
+    {
+      title: "Médicos",
+      value: totalDoctors.toString(),
+      icon: UsersIcon,
+    },
+  ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat) => (
-        <Card
-          key={stat.key}
-          className="h-full bg-white rounded-xl shadow-none border border-[#F3F4F6] px-6 py-5 flex flex-col justify-center"
-        >
-          <CardContent className="flex flex-col gap-3 p-0">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="bg-blue-50 rounded-full p-2 flex items-center justify-center">
-                {stat.icon}
-              </span>
-              <span className="text-muted-foreground font-medium text-sm leading-none">
-                {stat.label}
-              </span>
-            </div>
-            <span className="text-3xl font-medium text-black leading-tight">
-              {stat.getValue(values[stat.key])}
-            </span>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {stats.map((stat) => {
+        const Icon = stat.icon;
+        return (
+          <Card key={stat.title} className="gap-2">
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
+              <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+                <Icon className="text-primary h-4 w-4" />
+              </div>
+              <CardTitle className="text-muted-foreground text-sm font-medium">
+                {stat.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
-}
+};
 
-export default StatsCard;
+export default StatsCards;
